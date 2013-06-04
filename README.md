@@ -39,7 +39,7 @@ $b->create($filter);
 my $array_ref = $b->list();
 my $hash_ref = $b->info($filter);
 $b->set($filter, 'u1');
-$b->check($filter, 'u1');
+if ($b->check($filter, 'u1')) { say "it exists!" }
 my $hashref = $b->multi( $filter, qw(u1 u2 u3) );
 ```
 
