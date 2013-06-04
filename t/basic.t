@@ -1,0 +1,66 @@
+#!perl
+
+use Test::More;
+use 5.0101;
+
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+use Bloomd::Client;
+
+my $b = Bloomd::Client->new;
+ok $b, 'client created';
+
+#$b->drop('__test_filter__');
+#$b->flush('__test_filter__'), "flushed";
+
+my $filter = '__test_filter__' . $$;
+
+diag " using test filter name: $filter";
+ok $b->create($filter), 'filter created';
+
+is((scalar grep { $_->{name} eq $filter } @{$b->list()}), 1, 'filter listed');
+
+is_deeply $b->info($filter),
+  { capacity => 100000,
+    checks => 0,
+    check_hits => 0,
+    check_misses => 0,
+    in_memory => 1,
+    page_ins => 0,
+    page_outs => 0,
+    probability => '0.000100',
+    sets => 0,
+    set_hits => 0,
+    set_misses => 0,
+    size => 0,
+    storage => 300046
+  },
+  "filter info";
+
+ok $b->set($filter, 'u1'), 'set u1';
+ok $b->set($filter, 'u2'), 'set u2';
+
+ok $b->check($filter, 'u1'), 'check u1';
+ok $b->check($filter, 'u2'), 'check u2';
+ok !$b->check($filter, 'u3'), 'check u3';
+
+is_deeply $b->multi( $filter, qw(u1 u2 u3) ),
+  { u1 => 1, u2 => 1, u3 => '' },
+  'multi check';
+
+$b->bulk($filter, qw(v1 v2 u2));
+
+is_deeply $b->multi( $filter, qw(v1 v2 u2) ),
+  { v1 => 1, u2 => 1, v2 => 1 },
+  'multi check after bulk';
+
+ok $b->drop($filter);
+
+done_testing;
+
+
+#my $ret = $b->set(foobar => 'u1');
+#$ret = $b->set(foobar => 'u2');
+
+#$ret = $b->check(foobar => 'u3');
