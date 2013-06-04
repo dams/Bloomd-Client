@@ -8,7 +8,8 @@ Installation
 
 Basic installation
 
-``` perl Makefile.PL
+```
+perl Makefile.PL
 make
 make install
 ```
@@ -30,7 +31,8 @@ All the commands from bloomd
 with the same name. Return values are converted to Perl types (e.g. `1`/`<empty
 string>` instead of `Yes`/`No`)
 
-``` use Bloomd::Client;
+```
+use Bloomd::Client;
 my $b = Bloomd::Client->new;
 my $filter = 'test_filter';
 $b->create($filter);
