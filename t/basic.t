@@ -16,7 +16,7 @@ use lib "$Bin/../lib";
 use Test::More;
 use Bloomd::Client;
 
-my $b = Bloomd::Client->new;
+my $b = Bloomd::Client->new(host => $ENV{BLOOMD_HOST}, port => $ENV{BLOOMD_PORT});
 ok $b, 'client created';
 
 #$b->drop('__test_filter__');
@@ -25,12 +25,12 @@ ok $b, 'client created';
 my $filter = '__test_filter__' . $$;
 
 diag " using test filter name: $filter";
-ok $b->create($filter), 'filter created';
+ok $b->create($filter, 100_000, 0.0001, 1 ), 'filter created';
 
 is((scalar grep { $_->{name} eq $filter } @{$b->list()}), 1, 'filter listed');
 
 is_deeply $b->info($filter),
-  { capacity => 100000,
+  { capacity => 100_000,
     checks => 0,
     check_hits => 0,
     check_misses => 0,

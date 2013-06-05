@@ -117,8 +117,8 @@ Returns true if the filter didn't exist and was created successfully.
 method create ($name, $capacity?, $prob?, $in_memory?) {
     my $args =
         ( $capacity ? "capacity=$capacity" : '' )
-      . ( $prob ? "prob=$prob" : '' )
-      . ( $in_memory ? "in_memory=$in_memory" : '' );
+      . ( $prob ? " prob=$prob" : '' )
+      . ( $in_memory ? " in_memory=$in_memory" : '' );
     $self->_execute("create $name $args" ) eq 'Done';
 }
 
