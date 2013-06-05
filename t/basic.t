@@ -1,11 +1,19 @@
 #!perl
 
-use Test::More;
-use 5.0101;
+use feature ':5.12';
+
+BEGIN {
+    unless ( $ENV{BLOOMD_HOST} && $ENV{BLOOMD_PORT} ) {
+        require Test::More;
+        Test::More::plan(
+            skip_all => 'variable BLOOMD_HOST and BLOOMD_PORT should be defined to test against a real bloomd server' );
+    }
+}
 
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
+use Test::More;
 use Bloomd::Client;
 
 my $b = Bloomd::Client->new;
