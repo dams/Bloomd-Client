@@ -9,7 +9,8 @@ use autobox::Core;
 use List::MoreUtils qw(any mesh);
 use Carp;
 use IO::Socket::INET;
-use POSIX qw(ETIMEDOUT EWOULDBLOCK EAGAIN strerror);
+use Errno qw(:POSIX);
+use POSIX qw(strerror);
 use Config;
 
 =attr protocol
@@ -289,7 +290,7 @@ method _check_line($line) {
     defined $line
       and return $line;
     my $e = $!;
-    if (any { $e eq strerror($_) } ( EWOULDBLOCK, EAGAIN, ETIMEDOUT )) {
+    if (any { $_ } ( $!{EWOULDBLOCK}, $!{EAGAIN}, $!{ETIMEDOUT} )) {
         $e = strerror(ETIMEDOUT);
         $self->disconnect;
     }
