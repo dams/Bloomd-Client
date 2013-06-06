@@ -71,9 +71,9 @@ method _build__socket {
     $self->has_timeout
       or return $socket;
 
-    $Config{osname} eq 'netbsd'
-      and croak "the timeout option is not yet supported on NetBSD";
-
+    if($Config{osname} eq 'netbsd' || $Config{osname} eq 'solaris'){
+      croak "the timeout option is not yet supported on NetBSD or Solaris";
+    }
     my $seconds  = int( $self->timeout );
     my $useconds = int( 1_000_000 * ( $self->timeout - $seconds ) );
     my $timeout  = pack( 'l!l!', $seconds, $useconds );
