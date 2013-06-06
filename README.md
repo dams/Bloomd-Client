@@ -51,7 +51,7 @@ reading and on writing to the socket. It can be a float, up to microseconds.
 More doc
 --------
 
-Check on metacpan
+Check out [the documentation on metacpan](https://metacpan.org/module/Bloomd::Client).
 
 Build from the source
 ---------------------
@@ -61,7 +61,14 @@ build this distribution from source, use the `build/master` branch, and issue:
 
 ```shell
 perl Build.PL
+./Build test
 ./Build install
+```
+
+If you want to run the tests against a running bloomd server, you'll need to set BLOOMD_HOST and BLOOMD_PORT:
+
+```
+BLOOMD_HOST=127.0.0.1 BLOOMD_PORT=8673 ./Build test
 ```
 
 Contribute
@@ -78,8 +85,7 @@ dzil listdeps --missing | cpan
 dzil build
 ```
 
-If you want to run the tests, you'll need a bloomd server up and running, and
-you'll need to set BLOOMD_HOST and BLOOMD_PORT:
+If you want to run the tests against a running bloomd server, you'll need to set BLOOMD_HOST and BLOOMD_PORT:
 
 ```
 BLOOMD_HOST=127.0.0.1 BLOOMD_PORT=8673 dzil test
