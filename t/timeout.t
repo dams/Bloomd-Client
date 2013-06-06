@@ -53,7 +53,7 @@ my $server = create_server_with_timeout(2);
 my $b = Bloomd::Client->new(
     host             => '127.0.0.1',
     port             => $server->port,
-    timeout          => 1,
+    timeout          => 0.5,
 );
 
 ok $b, 'client created';
@@ -62,6 +62,9 @@ my $etimeout = strerror(ETIMEDOUT);
 
 throws_ok { $b->list() } qr/$etimeout/, "got timeout croak";
 
+# give time to the server to finish sleeping
+
+sleep 2;
 # now reissue an other command on the same object, which will not timeout. We
 # check that the socket is properly recreated.
 
