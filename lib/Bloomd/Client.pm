@@ -8,6 +8,7 @@ use Method::Signatures;
 use autobox::Core;    
 use List::MoreUtils qw(any mesh);
 use Carp;
+use Socket qw(:crlf);
 use IO::Socket::INET;
 use POSIX qw(ETIMEDOUT EWOULDBLOCK EAGAIN strerror);
 use Config;
@@ -266,12 +267,12 @@ method flush ($name) {
 method _execute ($command) {
      my $socket = $self->_socket;
 
-     $socket->print($command . "\r\n")
+     $socket->print($command . $CRLF)
        or croak "couldn't write to socket";
 
      my $line = $self->_check_line($socket->getline);
 
-     $line = $line->rtrim("\r\n");
+     $line = $line->rtrim($CRLF);
      $line =~ /^Client Error:/
        and croak "$line: $command";
 
@@ -280,7 +281,7 @@ method _execute ($command) {
 
      my @lines;
      push @lines, $line
-       while ( ($line = $self->_check_line($socket->getline)->rtrim("\r\n")) ne 'END');
+       while ( ($line = $self->_check_line($socket->getline)->rtrim($CRLF)) ne 'END');
  
      return @lines;
 }
