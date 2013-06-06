@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.15      2013-06-06 23:58:05 Europe/Paris
 * Minor fixes
 * Configure Travis for this project
 
