@@ -8,7 +8,7 @@ use lib "$Bin/../lib";
 use Test::More;
 use Test::Exception;
 use Test::TCP;
-use autobox::Core;
+use Socket qw(:crlf);
 use POSIX qw(ETIMEDOUT ECONNRESET strerror);
 use Bloomd::Client;
 
@@ -31,7 +31,7 @@ sub create_server_with_timeout {
                 my $client = $socket->accept();
 
                 if ( my $line = $client->getline() ) {
-                    $line = $line->trim("\r\n");
+                    $line =~ s/$CR?$LF?$//;
 #                    say STDERR " --- DEBUG line [$line]";
                     if ($in_timeout && $line ne 'info foo' ) {
                         sleep($in_timeout);
