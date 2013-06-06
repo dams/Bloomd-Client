@@ -29,7 +29,7 @@ All the commands from bloomd
 with the same name. Return values are converted to Perl types (e.g. `1`/`<empty
 string>` instead of `Yes`/`No`)
 
-```
+```perl
 use feature ':5.12';
 use Bloomd::Client;
 my $b = Bloomd::Client->new;
