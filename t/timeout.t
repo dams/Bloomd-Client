@@ -70,6 +70,6 @@ sleep 2;
 
 lives_ok {
     is_deeply $b->info('foo'), { foo => 'bar'}, "fake info returns proper results";
-}, "doesn't die without timeout";
+} "doesn't die without timeout";
 
 done_testing;
