@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+0.17      2013-06-07 10:57:47 Europe/Paris
+  * fix minimum perl version requirement for cpan testers
+
 0.16      2013-06-07 00:05:59 Europe/Paris
   * Fix Travis and dist.ini
 
