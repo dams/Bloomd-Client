@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.18      2013-06-07 10:59:22 Europe/Paris
+
 0.17      2013-06-07 10:57:47 Europe/Paris
   * fix minimum perl version requirement for cpan testers
 
