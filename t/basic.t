@@ -14,8 +14,32 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
 use Test::More;
+use Test::Exception;
 use Bloomd::Client;
 
+subtest "should not die if timeout is undefined" => sub {
+	my $b = Bloomd::Client->new(
+		host => $ENV{BLOOMD_HOST}, 
+		port => $ENV{BLOOMD_PORT},
+		timeout =>undef );
+	ok $b, 'client created';
+	
+	lives_ok { 
+		$b->create("__test_undef_timeout_$$");
+	};
+};
+
+subtest "should not die if timeout is 0" => sub {
+	my $b = Bloomd::Client->new(
+		host => $ENV{BLOOMD_HOST}, 
+		port => $ENV{BLOOMD_PORT},
+		timeout =>0 );
+	ok $b, 'client created';
+	
+	lives_ok { 
+		$b->create("__test_zero_timeout_$$");
+	};
+};
 my $b = Bloomd::Client->new(host => $ENV{BLOOMD_HOST}, port => $ENV{BLOOMD_PORT});
 ok $b, 'client created';
 
