@@ -44,7 +44,7 @@ The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
 
 =cut
 
-has timeout => ( is => 'ro', predicate => 1, default => sub { 10 } );
+has timeout => ( is => 'ro', , default => sub { 10 } );
 
 =head1 SYNOPSIS
 
@@ -69,7 +69,7 @@ method _build__socket {
         Timeout  => $self->timeout,
     ) or die "Can't connect to server: $!";
 
-    $self->has_timeout
+    $self->timeout
       or return $socket;
 
     $Config{osname} eq 'netbsd' || $Config{osname} eq 'solaris'
