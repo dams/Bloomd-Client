@@ -1,10 +1,8 @@
-package Bloomd::Client;
 
 # ABSTRACT: Perl client to the bloomd server
 
 use feature ':5.12';
-use Moo;
-use Method::Signatures;
+use mop;
 use List::MoreUtils qw(any mesh);
 use Carp;
 use Socket qw(:crlf);
@@ -19,7 +17,9 @@ The protocol. ro, defaults to 'tcp'
 
 =cut
 
-has protocol => ( is => 'ro', default => sub {'tcp'} );
+class Bloomd::Client {
+
+    has $protocol is ro = 'tcp';
 
 =attr host
 
@@ -27,7 +27,7 @@ The host to connect to. ro, defaults to '127.0.0.1'
 
 =cut
 
-has host => ( is => 'ro', default => sub {'127.0.0.1'} );
+    has $host is ro = '127.0.0.1';
 
 =attr port
 
@@ -35,8 +35,22 @@ The port to connect to. ro, defaults to '8673'
 
 =cut
 
-has port => ( is => 'ro', default => sub {8673} );
-has _socket => ( is => 'lazy', predicate => 1, clearer => 1 );
+    has $port is ro = 8673;
+    has $_socket;
+
+method _socket {
+    $_socket //= $self->_build__socket();
+}
+
+method _has_socket {
+    # XXX not a real predicate
+    defined $_socket
+}
+
+method _clear_socket {
+    # XXX not a real clearer
+    undef $_socket;
+}
 
 =attr timeout
 
@@ -44,7 +58,7 @@ The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
 
 =cut
 
-has timeout => ( is => 'ro', , default => sub { 10 } );
+  has $timeout is ro = 10;
 
 =head1 SYNOPSIS
 
@@ -77,12 +91,12 @@ method _build__socket {
 
     my $seconds  = int( $self->timeout );
     my $useconds = int( 1_000_000 * ( $self->timeout - $seconds ) );
-    my $timeout  = pack( 'l!l!', $seconds, $useconds );
+    my $_timeout  = pack( 'l!l!', $seconds, $useconds );
 
-    $socket->setsockopt( SOL_SOCKET, SO_RCVTIMEO, $timeout )
+    $socket->setsockopt( SOL_SOCKET, SO_RCVTIMEO, $_timeout )
       or croak "setsockopt(SO_RCVTIMEO): $!";
 
-    $socket->setsockopt( SOL_SOCKET, SO_SNDTIMEO, $timeout )
+    $socket->setsockopt( SOL_SOCKET, SO_SNDTIMEO, $_timeout )
       or croak "setsockopt(SO_SNDTIMEO): $!";
 
     return $socket;
@@ -115,7 +129,7 @@ Returns true if the filter didn't exist and was created successfully.
 
 =cut
 
-method create ($name, $capacity?, $prob?, $in_memory?) {
+method create ($name, $capacity, $prob, $in_memory) {
     my $args =
         ( $capacity ? "capacity=$capacity" : '' )
       . ( $prob ? " prob=$prob" : '' )
@@ -132,7 +146,8 @@ on them.
 
 =cut
 
-method list ($prefix? = '') {
+method list ($prefix) {
+    $prefix //= '';
     my @keys = qw(name prob size capacity items);
     [
      map {
@@ -302,4 +317,5 @@ method _check_line($line) {
     return $line;
 }
 
+}
 1;
