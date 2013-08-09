@@ -1,8 +1,19 @@
+#
+# This file is part of Bloomd-Client
+#
+# This software is copyright (c) 2013 by Damien "dams" Krotkine.
+#
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+#
 package Bloomd::Client;
+{
+  $Bloomd::Client::VERSION = '0.23';
+}
 
 # ABSTRACT: Perl client to the bloomd server
 
-use feature ':5.12';
+use feature ':5.10';
 use Moo;
 use Method::Signatures;
 use List::MoreUtils qw(any mesh);
@@ -13,53 +24,19 @@ use Errno qw(:POSIX);
 use POSIX qw(strerror);
 use Config;
 
-=attr protocol
-
-The protocol. ro, defaults to 'tcp'
-
-=cut
 
 has protocol => ( is => 'ro', default => sub {'tcp'} );
 
-=attr host
-
-The host to connect to. ro, defaults to '127.0.0.1'
-
-=cut
 
 has host => ( is => 'ro', default => sub {'127.0.0.1'} );
 
-=attr port
-
-The port to connect to. ro, defaults to '8673'
-
-=cut
 
 has port => ( is => 'ro', default => sub {8673} );
 has _socket => ( is => 'lazy', predicate => 1, clearer => 1 );
 
-=attr timeout
-
-The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
-
-=cut
 
 has timeout => ( is => 'ro', , default => sub { 10 } );
 
-=head1 SYNOPSIS
-
-  use feature ':5.12';
-  use Bloomd::Client;
-  my $b = Bloomd::Client->new( timeout => 0.2 );
-  my $filter = 'test_filter';
-  $b->create($filter);
-  my $array_ref = $b->list();
-  my $hash_ref = $b->info($filter);
-  $b->set($filter, 'u1');
-  if ($b->check($filter, 'u1')) { say "it exists!" }
-  my $hashref = $b->multi( $filter, qw(u1 u2 u3) );
-
-=cut
 
 method _build__socket {
     my $socket = IO::Socket::INET->new(
@@ -89,11 +66,6 @@ method _build__socket {
 
 }
 
-=method disconnect
-
-Closes the connection and reset the internal socket
-
-=cut
 
 method disconnect {
     $self->_has_socket
@@ -101,19 +73,6 @@ method disconnect {
     $self->_clear_socket;
 }
 
-=method create
-
-Creates a new bloom filter
-
-  $b->create($name, $capacity?, $probability?, $in_memory=0|1?)
-
-Only the name is mandatory. You can specify the initial capacity (if not the
-filter will be enlarged as needed), the probability of maximum false positives
-you want, and a flag to force the filter to not be in memory (by default it is).
-
-Returns true if the filter didn't exist and was created successfully.
-
-=cut
 
 method create ($name, $capacity?, $prob?, $in_memory?) {
     my $args =
@@ -123,14 +82,6 @@ method create ($name, $capacity?, $prob?, $in_memory?) {
     $self->_execute("create $name $args" ) eq 'Done';
 }
 
-=method list
-
-  my $array_ref = $b->list($prefix?)
-
-Returns an ArrayRef of the existing filters. You can provide a prefix to filter
-on them.
-
-=cut
 
 method list ($prefix? = '') {
     my @keys = qw(name prob size capacity items);
@@ -143,67 +94,27 @@ method list ($prefix? = '') {
     ];
 }
 
-=method drop
-
-  $b->drop($name)
-
-Drops a filter. Returns true if the filter existed and was removed properly.
-
-=cut
 
 method drop ($name) {
     $self->_execute("drop $name") eq 'Done';
 }
 
 
-=method close
-
-  $b->close($name)
-
-Closes a filter. Returns true on success.
-
-=cut
 
 method close ($name) {
     $self->_execute("close $name") eq 'Done';
 }
 
-=method clear
-
-  $b->clear($name)
-
-Clears a filter. Returns tru on success.
-
-=cut
 
 method clear ($name) {
     $self->_execute("clear $name") eq 'Done';
 }
 
-=method check
-
-  if ($b->check($name, $key)) {
-    print "the element $key matched\n";
-  }
-
-Given a filter name and a key name, returns true if the key was previously
-added in the filter (using C<set>).
-
-=cut
 
 method check ($name, $key) {
     $self->_execute("c $name $key") eq 'Yes';
 }
 
-=method multi
-
-  my $hash_ref = $b->multi($name, $key1, key2, key3);
-
-Given a filter name and a list of elements, returns a HashRef, which keys are
-the elements, and the values are 1 or 0, depending if the element is present in
-the filter or not.
-
-=cut
 
 method multi ($name, @keys) {
     @keys
@@ -212,26 +123,11 @@ method multi ($name, @keys) {
     +{mesh @keys, @values };
 }
 
-=method set
-
-  $b->set($name, $key);
-
-Adds the element to the given filter. Returns 1 if the elements was not
-previously in the filter and was properly added.
-
-=cut
 
 method set ($name, $key) {
     $self->_execute("s $name $key") eq 'Yes';
 }
 
-=method bulk
-
-  $b->bulk($name, $key1, $key2, $key3);
-
-Adds the elements to the given filter. Returns void
-
-=cut
 
 method bulk ($name, @keys) {
     @keys
@@ -240,25 +136,11 @@ method bulk ($name, @keys) {
     return;
 }
 
-=method info
-
-  my $hash_ref = $b->info($name);
-
-Returns a HashRef giving informations about the given filter name.
-
-=cut
 
 method info ($name) {
     +{ map { split / / } $self->_execute("info $name") };
 }
 
-=method flush
-
-  $b->flush($name);
-
-Flushes the filter. Returns true on success.
-
-=cut
 
 method flush ($name) {
     $self->_execute("info $name") eq "Done";
@@ -303,3 +185,144 @@ method _check_line($line) {
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Bloomd::Client - Perl client to the bloomd server
+
+=head1 VERSION
+
+version 0.23
+
+=head1 SYNOPSIS
+
+  use feature ':5.12';
+  use Bloomd::Client;
+  my $b = Bloomd::Client->new( timeout => 0.2 );
+  my $filter = 'test_filter';
+  $b->create($filter);
+  my $array_ref = $b->list();
+  my $hash_ref = $b->info($filter);
+  $b->set($filter, 'u1');
+  if ($b->check($filter, 'u1')) { say "it exists!" }
+  my $hashref = $b->multi( $filter, qw(u1 u2 u3) );
+
+=head1 ATTRIBUTES
+
+=head2 protocol
+
+The protocol. ro, defaults to 'tcp'
+
+=head2 host
+
+The host to connect to. ro, defaults to '127.0.0.1'
+
+=head2 port
+
+The port to connect to. ro, defaults to '8673'
+
+=head2 timeout
+
+The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
+
+=head1 METHODS
+
+=head2 disconnect
+
+Closes the connection and reset the internal socket
+
+=head2 create
+
+Creates a new bloom filter
+
+  $b->create($name, $capacity?, $probability?, $in_memory=0|1?)
+
+Only the name is mandatory. You can specify the initial capacity (if not the
+filter will be enlarged as needed), the probability of maximum false positives
+you want, and a flag to force the filter to not be in memory (by default it is).
+
+Returns true if the filter didn't exist and was created successfully.
+
+=head2 list
+
+  my $array_ref = $b->list($prefix?)
+
+Returns an ArrayRef of the existing filters. You can provide a prefix to filter
+on them.
+
+=head2 drop
+
+  $b->drop($name)
+
+Drops a filter. Returns true if the filter existed and was removed properly.
+
+=head2 close
+
+  $b->close($name)
+
+Closes a filter. Returns true on success.
+
+=head2 clear
+
+  $b->clear($name)
+
+Clears a filter. Returns tru on success.
+
+=head2 check
+
+  if ($b->check($name, $key)) {
+    print "the element $key matched\n";
+  }
+
+Given a filter name and a key name, returns true if the key was previously
+added in the filter (using C<set>).
+
+=head2 multi
+
+  my $hash_ref = $b->multi($name, $key1, key2, key3);
+
+Given a filter name and a list of elements, returns a HashRef, which keys are
+the elements, and the values are 1 or 0, depending if the element is present in
+the filter or not.
+
+=head2 set
+
+  $b->set($name, $key);
+
+Adds the element to the given filter. Returns 1 if the elements was not
+previously in the filter and was properly added.
+
+=head2 bulk
+
+  $b->bulk($name, $key1, $key2, $key3);
+
+Adds the elements to the given filter. Returns void
+
+=head2 info
+
+  my $hash_ref = $b->info($name);
+
+Returns a HashRef giving informations about the given filter name.
+
+=head2 flush
+
+  $b->flush($name);
+
+Flushes the filter. Returns true on success.
+
+=head1 AUTHOR
+
+Damien "dams" Krotkine
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Damien "dams" Krotkine.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

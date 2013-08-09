@@ -1,4 +1,6 @@
-{{$NEXT}}
+0.23      2013-08-09 20:46:17 Europe/Paris
+
+  * fix issue #9: perl 5.12 not required, require 5.10
 
 0.22      2013-06-18 22:58:23 Europe/Paris
 
