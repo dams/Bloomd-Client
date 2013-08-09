@@ -2,7 +2,7 @@ package Bloomd::Client;
 
 # ABSTRACT: Perl client to the bloomd server
 
-use feature ':5.12';
+use feature ':5.10';
 use Moo;
 use Method::Signatures;
 use List::MoreUtils qw(any mesh);

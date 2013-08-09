@@ -10,7 +10,7 @@ BEGIN {
     }
 }
 
-use feature ':5.12';
+use feature ':5.10';
 
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
