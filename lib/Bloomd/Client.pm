@@ -12,6 +12,7 @@ use IO::Socket::INET;
 use Errno qw(:POSIX);
 use POSIX qw(strerror);
 use Config;
+use Types::Standard -types;
 
 =attr protocol
 
@@ -27,7 +28,7 @@ The host to connect to. ro, defaults to '127.0.0.1'
 
 =cut
 
-has host => ( is => 'ro', default => sub {'127.0.0.1'} );
+has host => ( is => 'ro', isa => StrMatch[qr/.+/], default => sub {'127.0.0.1'} );
 
 =attr port
 
@@ -35,7 +36,7 @@ The port to connect to. ro, defaults to '8673'
 
 =cut
 
-has port => ( is => 'ro', default => sub {8673} );
+has port => ( is => 'ro', isa => Int, default => sub {8673} );
 has _socket => ( is => 'lazy', predicate => 1, clearer => 1 );
 
 =attr timeout
