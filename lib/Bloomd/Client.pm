@@ -8,7 +8,7 @@
 #
 package Bloomd::Client;
 {
-  $Bloomd::Client::VERSION = '0.23';
+  $Bloomd::Client::VERSION = '0.25';
 }
 
 # ABSTRACT: Perl client to the bloomd server
@@ -23,15 +23,16 @@ use IO::Socket::INET;
 use Errno qw(:POSIX);
 use POSIX qw(strerror);
 use Config;
+use Types::Standard -types;
 
 
 has protocol => ( is => 'ro', default => sub {'tcp'} );
 
 
-has host => ( is => 'ro', default => sub {'127.0.0.1'} );
+has host => ( is => 'ro', isa => StrMatch[qr/.+/], default => sub {'127.0.0.1'} );
 
 
-has port => ( is => 'ro', default => sub {8673} );
+has port => ( is => 'ro', isa => Int, default => sub {8673} );
 has _socket => ( is => 'lazy', predicate => 1, clearer => 1 );
 
 
@@ -187,7 +188,6 @@ method _check_line($line) {
 1;
 
 __END__
-
 =pod
 
 =head1 NAME
@@ -196,7 +196,7 @@ Bloomd::Client - Perl client to the bloomd server
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 SYNOPSIS
 
@@ -210,6 +210,11 @@ version 0.23
   $b->set($filter, 'u1');
   if ($b->check($filter, 'u1')) { say "it exists!" }
   my $hashref = $b->multi( $filter, qw(u1 u2 u3) );
+
+=head1 DESCRIPTION
+
+This is a Perl client to connect to the Bloomd server. See
+L<http://armon.github.io/bloomd/> for the server website.
 
 =head1 ATTRIBUTES
 
@@ -326,3 +331,4 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
+

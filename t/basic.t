@@ -25,6 +25,13 @@ use Test::More;
 use Test::Exception;
 use Bloomd::Client;
 
+subtest "should die if host/port is invalid" => sub { 
+	throws_ok( sub{ Bloomd::Client->new(host => undef) }, qr/Str/, "should not accept host undef");
+	throws_ok( sub{ Bloomd::Client->new(host => "")    }, qr/Str/, "should not accept host empty string");
+	throws_ok( sub{ Bloomd::Client->new(port => undef) }, qr/Int/, "should not accept port undef");
+	throws_ok( sub{ Bloomd::Client->new(port => "")    }, qr/Int/, "should not accept port empty string");
+};
+
 subtest "should not die if timeout is undefined" => sub {
 	my $b = Bloomd::Client->new(
 		host => $ENV{BLOOMD_HOST}, 
