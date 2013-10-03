@@ -47,6 +47,11 @@ The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
 
 has timeout => ( is => 'ro', , default => sub { 10 } );
 
+=head1 DESCRIPTION
+
+This is a Perl client to connect to the Bloomd server. See
+L<http://armon.github.io/bloomd/> for the server website.
+
 =head1 SYNOPSIS
 
   use feature ':5.12';
