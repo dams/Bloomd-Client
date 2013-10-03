@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.25      2013-10-03 14:34:08 Europe/Paris
+
 0.24      2013-10-01 17:30:36 Europe/Paris
   * fix issue #11, parameters are now validated (Tiago Peczenyj)
 
