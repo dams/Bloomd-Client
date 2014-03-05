@@ -4,7 +4,6 @@ package Bloomd::Client;
 
 use feature ':5.10';
 use Moo;
-use Method::Signatures;
 use List::MoreUtils qw(any mesh);
 use Carp;
 use Socket qw(:crlf);
@@ -67,7 +66,8 @@ L<http://armon.github.io/bloomd/> for the server website.
 
 =cut
 
-method _build__socket {
+sub _build__socket {
+    my ($self) = @_;
     my $socket = IO::Socket::INET->new(
         Proto => $self->protocol,
         PeerHost => $self->host,
@@ -101,7 +101,8 @@ Closes the connection and reset the internal socket
 
 =cut
 
-method disconnect {
+sub disconnect {
+    my ($self) = @_;
     $self->_has_socket
       and $self->_socket->close;
     $self->_clear_socket;
@@ -121,7 +122,8 @@ Returns true if the filter didn't exist and was created successfully.
 
 =cut
 
-method create ($name, $capacity?, $prob?, $in_memory?) {
+sub create {
+    my ($self, $name, $capacity, $prob, $in_memory) = @_;
     my $args =
         ( $capacity ? "capacity=$capacity" : '' )
       . ( $prob ? " prob=$prob" : '' )
@@ -138,7 +140,9 @@ on them.
 
 =cut
 
-method list ($prefix? = '') {
+sub list {
+    my ($self, $prefix) = @_;
+    $prefix //= '';
     my @keys = qw(name prob size capacity items);
     [
      map {
@@ -157,7 +161,8 @@ Drops a filter. Returns true if the filter existed and was removed properly.
 
 =cut
 
-method drop ($name) {
+sub drop {
+    my ($self, $name) = @_;
     $self->_execute("drop $name") eq 'Done';
 }
 
@@ -170,7 +175,8 @@ Closes a filter. Returns true on success.
 
 =cut
 
-method close ($name) {
+sub close {
+    my ($self, $name) = @_;
     $self->_execute("close $name") eq 'Done';
 }
 
@@ -182,7 +188,8 @@ Clears a filter. Returns tru on success.
 
 =cut
 
-method clear ($name) {
+sub clear {
+    my ($self, $name) = @_;
     $self->_execute("clear $name") eq 'Done';
 }
 
@@ -197,7 +204,8 @@ added in the filter (using C<set>).
 
 =cut
 
-method check ($name, $key) {
+sub check {
+    my ($self, $name, $key) = @_;
     $self->_execute("c $name $key") eq 'Yes';
 }
 
@@ -211,7 +219,8 @@ the filter or not.
 
 =cut
 
-method multi ($name, @keys) {
+sub multi {
+    my ($self, $name, @keys) = @_;
     @keys
       or return {};
     my @values = map { $_ eq 'Yes' } split / /, $self->_execute("m $name @keys");
@@ -227,7 +236,8 @@ previously in the filter and was properly added.
 
 =cut
 
-method set ($name, $key) {
+sub set {
+    my ($self, $name, $key) = @_;
     $self->_execute("s $name $key") eq 'Yes';
 }
 
@@ -239,7 +249,8 @@ Adds the elements to the given filter. Returns void
 
 =cut
 
-method bulk ($name, @keys) {
+sub bulk {
+    my ($self, $name, @keys) = @_;
     @keys
       or return;
     $self->_execute("b $name @keys");
@@ -254,7 +265,8 @@ Returns a HashRef giving informations about the given filter name.
 
 =cut
 
-method info ($name) {
+sub info {
+    my ($self, $name) = @_;
     +{ map { split / / } $self->_execute("info $name") };
 }
 
@@ -266,35 +278,39 @@ Flushes the filter. Returns true on success.
 
 =cut
 
-method flush ($name) {
+sub flush {
+    my ($self, $name) = @_;
     $self->_execute("info $name") eq "Done";
 }
 
-method _execute ($command) {
-     my $socket = $self->_socket;
+sub _execute {
+    my ($self, $command) = @_;
+    my $socket = $self->_socket;
 
-     $socket->print($command . $CRLF)
-       or croak "couldn't write to socket";
+    local $\;
+    $socket->print($command . $CRLF)
+      or croak "couldn't write to socket";
 
-     my $line = $self->_check_line($socket->getline);
-     $line =~ /^Client Error:/
-       and croak "$line: $command";
+    my $line = $self->_check_line($socket->getline);
+    $line =~ /^Client Error:/
+      and croak "$line: $command";
 
-     $line eq 'START'
-       or return $line;
+    $line eq 'START'
+      or return $line;
 
-     my @lines;
-     while (1) {
-         $line = $self->_check_line($socket->getline);
-         $line eq 'END'
-           and last;
-         push @lines, $line;
-     }
- 
-     return @lines;
+    my @lines;
+    while (1) {
+        $line = $self->_check_line($socket->getline);
+        $line eq 'END'
+          and last;
+        push @lines, $line;
+    }
+
+    return @lines;
 }
 
-method _check_line($line) {
+sub _check_line {
+    my ($self, $line) = @_;
     if (!defined $line) {
         my $e = $!;
         if (any { $_ } ( $!{EWOULDBLOCK}, $!{EAGAIN}, $!{ETIMEDOUT} )) {
