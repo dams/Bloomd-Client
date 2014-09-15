@@ -46,6 +46,8 @@ The timeout (on read and write), in seconds. Can be a float. ro, defaults to 10.
 
 has timeout => ( is => 'ro', , default => sub { 10 } );
 
+has '_pid' => (is => 'ro', lazy => 1, clearer => 1, default => sub { $$ });
+
 =head1 DESCRIPTION
 
 This is a Perl client to connect to the Bloomd server. See
@@ -285,6 +287,10 @@ sub flush {
 
 sub _execute {
     my ($self, $command) = @_;
+	if ($self->_pid ne $$) {
+		$self->_clear_socket;
+		$self->_clear_pid;
+	}
     my $socket = $self->_socket;
 
     local $\;
