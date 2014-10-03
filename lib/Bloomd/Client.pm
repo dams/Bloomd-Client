@@ -8,14 +8,13 @@
 #
 package Bloomd::Client;
 {
-  $Bloomd::Client::VERSION = '0.25';
+  $Bloomd::Client::VERSION = '0.27';
 }
 
 # ABSTRACT: Perl client to the bloomd server
 
 use feature ':5.10';
 use Moo;
-use Method::Signatures;
 use List::MoreUtils qw(any mesh);
 use Carp;
 use Socket qw(:crlf);
@@ -38,8 +37,11 @@ has _socket => ( is => 'lazy', predicate => 1, clearer => 1 );
 
 has timeout => ( is => 'ro', , default => sub { 10 } );
 
+has '_pid' => (is => 'ro', lazy => 1, clearer => 1, default => sub { $$ });
 
-method _build__socket {
+
+sub _build__socket {
+    my ($self) = @_;
     my $socket = IO::Socket::INET->new(
         Proto => $self->protocol,
         PeerHost => $self->host,
@@ -68,14 +70,16 @@ method _build__socket {
 }
 
 
-method disconnect {
+sub disconnect {
+    my ($self) = @_;
     $self->_has_socket
       and $self->_socket->close;
     $self->_clear_socket;
 }
 
 
-method create ($name, $capacity?, $prob?, $in_memory?) {
+sub create {
+    my ($self, $name, $capacity, $prob, $in_memory) = @_;
     my $args =
         ( $capacity ? "capacity=$capacity" : '' )
       . ( $prob ? " prob=$prob" : '' )
@@ -84,7 +88,9 @@ method create ($name, $capacity?, $prob?, $in_memory?) {
 }
 
 
-method list ($prefix? = '') {
+sub list {
+    my ($self, $prefix) = @_;
+    $prefix //= '';
     my @keys = qw(name prob size capacity items);
     [
      map {
@@ -96,28 +102,33 @@ method list ($prefix? = '') {
 }
 
 
-method drop ($name) {
+sub drop {
+    my ($self, $name) = @_;
     $self->_execute("drop $name") eq 'Done';
 }
 
 
 
-method close ($name) {
+sub close {
+    my ($self, $name) = @_;
     $self->_execute("close $name") eq 'Done';
 }
 
 
-method clear ($name) {
+sub clear {
+    my ($self, $name) = @_;
     $self->_execute("clear $name") eq 'Done';
 }
 
 
-method check ($name, $key) {
+sub check {
+    my ($self, $name, $key) = @_;
     $self->_execute("c $name $key") eq 'Yes';
 }
 
 
-method multi ($name, @keys) {
+sub multi {
+    my ($self, $name, @keys) = @_;
     @keys
       or return {};
     my @values = map { $_ eq 'Yes' } split / /, $self->_execute("m $name @keys");
@@ -125,12 +136,14 @@ method multi ($name, @keys) {
 }
 
 
-method set ($name, $key) {
+sub set {
+    my ($self, $name, $key) = @_;
     $self->_execute("s $name $key") eq 'Yes';
 }
 
 
-method bulk ($name, @keys) {
+sub bulk {
+    my ($self, $name, @keys) = @_;
     @keys
       or return;
     $self->_execute("b $name @keys");
@@ -138,40 +151,49 @@ method bulk ($name, @keys) {
 }
 
 
-method info ($name) {
+sub info {
+    my ($self, $name) = @_;
     +{ map { split / / } $self->_execute("info $name") };
 }
 
 
-method flush ($name) {
+sub flush {
+    my ($self, $name) = @_;
     $self->_execute("info $name") eq "Done";
 }
 
-method _execute ($command) {
-     my $socket = $self->_socket;
+sub _execute {
+    my ($self, $command) = @_;
+	if ($self->_pid ne $$) {
+		$self->_clear_socket;
+		$self->_clear_pid;
+	}
+    my $socket = $self->_socket;
 
-     $socket->print($command . $CRLF)
-       or croak "couldn't write to socket";
+    local $\;
+    $socket->print($command . $CRLF)
+      or croak "couldn't write to socket";
 
-     my $line = $self->_check_line($socket->getline);
-     $line =~ /^Client Error:/
-       and croak "$line: $command";
+    my $line = $self->_check_line($socket->getline);
+    $line =~ /^Client Error:/
+      and croak "$line: $command";
 
-     $line eq 'START'
-       or return $line;
+    $line eq 'START'
+      or return $line;
 
-     my @lines;
-     while (1) {
-         $line = $self->_check_line($socket->getline);
-         $line eq 'END'
-           and last;
-         push @lines, $line;
-     }
- 
-     return @lines;
+    my @lines;
+    while (1) {
+        $line = $self->_check_line($socket->getline);
+        $line eq 'END'
+          and last;
+        push @lines, $line;
+    }
+
+    return @lines;
 }
 
-method _check_line($line) {
+sub _check_line {
+    my ($self, $line) = @_;
     if (!defined $line) {
         my $e = $!;
         if (any { $_ } ( $!{EWOULDBLOCK}, $!{EAGAIN}, $!{ETIMEDOUT} )) {
@@ -188,7 +210,10 @@ method _check_line($line) {
 1;
 
 __END__
+
 =pod
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -196,7 +221,7 @@ Bloomd::Client - Perl client to the bloomd server
 
 =head1 VERSION
 
-version 0.25
+version 0.27
 
 =head1 SYNOPSIS
 
@@ -331,4 +356,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

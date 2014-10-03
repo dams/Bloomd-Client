@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use 5.010;
+use 5.010000;
 
 use ExtUtils::MakeMaker 6.30;
 
@@ -12,10 +12,7 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "Perl client to the bloomd server",
   "AUTHOR" => "Damien \"dams\" Krotkine",
   "BUILD_REQUIRES" => {
-    "Module::Build" => "0.3601",
-    "Test::Exception" => 0,
-    "Test::More" => 0,
-    "Test::TCP" => 0
+    "Module::Build" => "0.3601"
   },
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30",
@@ -29,28 +26,44 @@ my %WriteMakefileArgs = (
     "Config" => 0,
     "IO::Socket::INET" => 0,
     "List::MoreUtils" => 0,
-    "Method::Signatures" => 0,
     "Moo" => 0,
     "Type::Tiny" => "0.026"
   },
-  "VERSION" => "0.25",
+  "TEST_REQUIRES" => {
+    "File::Spec" => 0,
+    "IO::Handle" => 0,
+    "IPC::Open3" => 0,
+    "Test::Exception" => 0,
+    "Test::More" => 0,
+    "Test::TCP" => 0
+  },
+  "VERSION" => "0.27",
   "test" => {
     "TESTS" => "t/*.t"
   }
 );
 
 
-unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
-  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
-  my $pp = $WriteMakefileArgs{PREREQ_PM};
-  for my $mod ( keys %$br ) {
-    if ( exists $pp->{$mod} ) {
-      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
-    }
-    else {
-      $pp->{$mod} = $br->{$mod};
-    }
-  }
+my %FallbackPrereqs = (
+  "Config" => 0,
+  "File::Spec" => 0,
+  "IO::Handle" => 0,
+  "IO::Socket::INET" => 0,
+  "IPC::Open3" => 0,
+  "List::MoreUtils" => 0,
+  "Module::Build" => "0.3601",
+  "Moo" => 0,
+  "Test::Exception" => 0,
+  "Test::More" => 0,
+  "Test::TCP" => 0,
+  "Type::Tiny" => "0.026"
+);
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  delete $WriteMakefileArgs{TEST_REQUIRES};
+  delete $WriteMakefileArgs{BUILD_REQUIRES};
+  $WriteMakefileArgs{PREREQ_PM} = \%FallbackPrereqs;
 }
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
